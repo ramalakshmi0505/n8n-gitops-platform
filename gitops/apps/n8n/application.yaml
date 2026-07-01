@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: n8n
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://n8n-io.github.io/n8n-helm-chart
+    chart: n8n
+    targetRevision: 0.25.2
+    helm:
+      valuesObject:
+        replicaCount: 1
+
+        image:
+          tag: "1.47.1"
+
+        config:
+          generic:
+            timezone: "Europe/Berlin"
+
+        ingress:
+          enabled: true
+          className: traefik
+          hosts:
+            - host: n8n.localhost
+              paths:
+                - path: /
+                  pathType: Prefix
+
+        persistence:
+          enabled: true
+          size: 2Gi
+          storageClass: local-path
+
+        # Security: basic auth at ingress level (replace with SSO in prod)
+        secret:
+          N8N_BASIC_AUTH_ACTIVE: "true"
+          N8N_BASIC_AUTH_USER: "admin"
+          # Change before deploying — use a Kubernetes Secret or Vault in prod
+          N8N_BASIC_AUTH_PASSWORD: "changeme"
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: n8n
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
