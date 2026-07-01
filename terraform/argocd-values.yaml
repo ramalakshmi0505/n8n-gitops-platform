@@ -1,0 +1,24 @@
+server:
+  extraArgs:
+    - --insecure          # TLS terminated at ingress; remove in prod
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - argocd.localhost
+
+configs:
+  params:
+    server.insecure: true
+
+redis-ha:
+  enabled: false          # keep it simple for local dev
+
+controller:
+  replicas: 1
+
+repoServer:
+  replicas: 1
+
+applicationSet:
+  replicas: 1
